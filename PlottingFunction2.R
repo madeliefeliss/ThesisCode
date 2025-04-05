@@ -3,6 +3,7 @@
 #' @param x REmrt object from metacart
 #' @param iter Number of bootstrap iterations (default 10)
 #' @param level_spacing Vertical spacing between levels (default 150)
+#' @import visNetwork
 #' @param node_spacing Horizontal spacing between nodes (default 100)
 #' @export
 plot_pruning_tree <- function(x, iter = 10, level_spacing = 150, node_spacing = 100) {
