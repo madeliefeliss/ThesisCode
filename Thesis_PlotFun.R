@@ -7,5 +7,7 @@ y <- REmrt(efk ~ m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9 + m10,
 
 
 plot.PV(y, iter = 10)
-
+plot.PV.I(y, iter = 10)
+plot.PV.TN(y, iter = 10)
+warnings()
 

@@ -222,38 +222,58 @@ oval_draw <- function(plotobj, x, y, c, x.scale = 1, y.scale = 1,
   )
   
   if (!is.null(frequency)) {
-    # Generate 10 highly distinct shades of blue
-    color_palette <- c("#e0f3ff", "#c2e1ff", "#a3ceff", "#85bbff", "#6699ff",
-                       "#4a7aff", "#2e5aff", "#143aff", "#0022cc", "#001199")  # Darker blues
     
-    # Define fixed breaks in increments of 10
-    steps <- ceiling(iter / 10)  # Round up to nearest integer
-    breaks <- seq(0, iter, steps)
+    # Defining the fixed breaks in increments of 5
+    # & rounding up to nearest integer:
+    steps <- ceiling(iter / 5)  
+    breaks <- seq(0, iter, by = steps)
     
-    # Ensure exactly 10 bins
-    if (length(breaks) > 11) breaks <- breaks[1:11]
+    # Creating non-overlapping labels:
+    if (steps == 1) {
+      
+      # If steps are 1, just use single numbers:
+      labels <- as.character(breaks[1:(length(breaks)-1)])
+      labels[length(breaks)-1] <- iter
+      
+    } else{
+      
+      # Otherwise, create range labels:
+      labels <- vector("character", length(breaks) - 1)
+      
+      for(i in 1:(length(breaks)-1)) {
+        if(i == 1){
+          labels[i] <- paste0(breaks[i], "-", breaks[i+1])
+        } else{
+          labels[i] <- paste0(breaks[i] + 1, "-", breaks[i+1])
+          
+        }
+      }
+      
+    }
     
-    # Generate labels (e.g., "0-10", "10-20", ...)
-    labels <- paste(head(breaks, -1), tail(breaks, -1), sep = "-")
+    # Generating 5 distinct shades of blue:
+    color_palette <- colorRampPalette(c("#e0f3ff", "#001199"))(length(labels))
     
-    # Assign frequency values to bins
-    color_bins <- cut(frequency, breaks = breaks, include.lowest = TRUE, labels = labels)
+    # Assigning the frequency values to bins:
+    color_bins <- cut(frequency, breaks = breaks, include.lowest = TRUE, labels = labels, right = FALSE)
+    fill_color <- factor(color_bins, levels = rev(labels))  
     
-    # Convert to a factor with the correct order (reversed)
-    fill_color <- factor(color_bins, levels = rev(labels))  # Reverse levels
+    } else {
     
-  } else {
-    fill_color <- "lightgrey"
-  }
+      fill_color <- "lightgrey"
   
-  # Apply the color to the plot
+    }
+    
+  
+  # Applying the color to the plot:
   plotobj <- plotobj +
     geom_polygon(data = df,
                  aes(x, y, fill = fill_color),
                  color = "black") 
   
   return(plotobj)  
-
+  
 }
+
 
 

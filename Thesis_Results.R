@@ -228,7 +228,7 @@ for (filename in names(terminal_node_counts)) {
 # Preparing the variables for plotting:
 node_df <- node_df %>%
   mutate(
-    c_delta = factor(paste0("r = ", correlation, ", d = ", delta)),  # Correlation + delta as facet variable
+    c_delta = factor(paste0(~delta~"ρ = ", correlation, ", δ = ", delta)),  # Correlation + delta as facet variable
     moderators = factor(moderators, levels = c("CON", "CAT", "UBCAT"))  # Ensure correct order
   )
 
@@ -245,7 +245,7 @@ plot_terminal_nodes <- function(tree_num) {
     
     labs(
       title = "",
-      x = "c.pruning",  
+      x = "Pruning Strictness",  
       y = "Proportion of Terminal Nodes"
     ) +
     
@@ -265,7 +265,7 @@ plot_terminal_nodes <- function(tree_num) {
     
     scale_fill_manual(
       values = c("#a6cee3", "#1f78b4", "#d66a75", "#f87a32", "#7a2d3c", "black"),
-        name = "Amount of Terminal Nodes"
+        name = "Terminal Node\nCount"
       )
 }
 
@@ -319,6 +319,10 @@ mean_correlationCON3 <- mean(upper_triangleCON)
 mean_correlationCAT3 <- mean(upper_triangleCAT)
 mean_correlationUBCAT3 <- mean(upper_triangleUBCAT)
 
+mean_correlationCON3 
+mean_correlationCAT3 
+mean_correlationUBCAT3
+
 mean_correlationCON1 ; mean_correlationCAT1 ; mean_correlationUBCAT1
 mean_correlationCON2 ; mean_correlationCAT2 ; mean_correlationUBCAT2
 mean_correlationCON3 ; mean_correlationCAT3 ; mean_correlationUBCAT3
@@ -331,7 +335,8 @@ mean_correlationCON3 ; mean_correlationCAT3 ; mean_correlationUBCAT3
 # Preparation: 
 library(ggplot2)
 library(dplyr)  
-  
+library(patchwork)
+
 results_df$moderators <- as.factor(results_df$moderators)
 results_df$correlation <- as.factor(results_df$correlation)
 results_df$c_pruning <- as.factor(results_df$c_pruning)
@@ -340,6 +345,8 @@ results_df$tree <- as.factor(results_df$tree)
 
 dfT1 <- results_df[results_df$tree == 1, ]
 dfT2 <- results_df[results_df$tree == 2, ]
+
+dfT1
 
 # Tree model 1:
 
@@ -373,7 +380,14 @@ anova(aov_mainT1, aov_3wayT1)
 # Normality of residuals:
 
 # Q-Q plot:
-plot(aov_2wayT1, which = 2)  
+qq_data1 <- data.frame(resid = residuals(aov_2wayT1))
+ggplot(qq_data1, aes(sample = resid)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  theme_minimal() +
+  labs(title = "",
+       x = "Theoretical Quantiles",
+       y = "Sample Quantiles")
 
 # Shapiro-Wilk test:
 shapiro.test(residuals(aov_2wayT1))  
@@ -381,22 +395,21 @@ shapiro.test(residuals(aov_2wayT1))
 # Homoscedasticity: 
 
 # Residuals vs. fitted plot:
-plot(aov_2wayT1, which = 1)  
+fitted_vals1 <- fitted(aov_2wayT1)
+resid_vals1 <- residuals(aov_2wayT1)
+resid_data1 <- data.frame(fitted = fitted_vals1, resid = resid_vals1)
 
-# Outliers:
-
-# Cook's distance plot:
-plot(aov_2wayT1, which = 4)  
-
-# Residuals vs. leverage:
-plot(aov_2wayT1, which = 5)  
+ggplot(resid_data1, aes(x = fitted, y = resid)) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, color = "red") +
+  theme_minimal() +
+  labs(title = "",
+       x = "Fitted Values",
+       y = "Residuals")
 
 summary(aov_2wayT1)
 
-TukeyHSD(aov_2wayT1, "correlation")
 TukeyHSD(aov_2wayT1, "delta")
-TukeyHSD(aov_2wayT1, "moderators:correlation")
-TukeyHSD(aov_2wayT1, "correlation:c_pruning")
 
 # Calculating the mean entropy for each combination of 
 # c_pruning and moderators:
@@ -415,7 +428,7 @@ ggplot(df_summaryT1, aes(x = correlation, y = mean_entropy, color = c_pruning)) 
   labs(
     x = "Correlation",
     y = "Mean Entropy",
-    title = "Interaction between Pruning and Correlation on Entropy",
+    title = "",
     color = "Pruning Value"
   ) +
   theme_minimal() +
@@ -434,7 +447,7 @@ ggplot(df_summaryT1_2, aes(x = correlation, y = mean_entropy, color = moderators
   labs(
     x = "Correlation",
     y = "Mean Entropy",
-    title = "Interaction between Correlation and Moderators on Entropy",
+    title = "",
     color = "Moderators"
   ) +
   theme_minimal() +
@@ -474,38 +487,180 @@ anova(aov_2wayT2, aov_3wayT2)
 anova(aov_mainT2, aov_3wayT2) 
 
 # Checking assumptions:
-par(mfrow = c(1, 1))  
 
 # Normality of residuals:
 
 # Q-Q plot:
-plot(aov_mainT2, which = 2)  
+qq_data2 <- data.frame(resid = residuals(aov_3wayT2))
+ggplot(qq_data2, aes(sample = resid)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  theme_minimal() +
+  labs(title = "",
+       x = "Theoretical Quantiles",
+       y = "Sample Quantiles")
 
 # Shapiro-Wilk test:
-shapiro.test(residuals(aov_mainT2))  
+shapiro.test(residuals(aov_3wayT2))  
 
-# Homoscedasticity:
+# Homoscedasticity: 
 
 # Residuals vs. fitted plot:
-plot(aov_mainT2, which = 1)  
+fitted_vals2 <- fitted(aov_3wayT2)
+resid_vals2 <- residuals(aov_3wayT2)
+resid_data2 <- data.frame(fitted = fitted_vals2, resid = resid_vals2)
 
-# Outliers:
+ggplot(resid_data2, aes(x = fitted, y = resid)) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, color = "red") +
+  theme_minimal() +
+  labs(title = "",
+       x = "Fitted Values",
+       y = "Residuals")
 
-# Cook's distance plot:
-plot(aov_mainT2, which = 4)  
+summary(aov_3wayT2)
 
-# Residuals vs. leverage:
-plot(aov_mainT2, which = 5)  
+# Interaction plots:
 
-summary(aov_mainT2)
+df_summary_T2_delta03_1 <- dfT2 %>%
+  filter(delta == 0.3) %>%
+  group_by(correlation, moderators) %>%
+  summarise(mean_entropy = mean(entropy, na.rm = TRUE))
 
-TukeyHSD(aov_mainT2, "correlation")
-TukeyHSD(aov_mainT2, "delta")
+df_summary_T2_delta05_1 <- dfT2 %>%
+  filter(delta == 0.5) %>%
+  group_by(correlation, moderators) %>%
+  summarise(mean_entropy = mean(entropy, na.rm = TRUE))
+
+# Theme:
+plot_theme <- theme_minimal() +
+  theme(
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    plot.title = element_text(hjust = 0.5, size = 16)
+  )
+
+# Plot 1: Moderator and Correlation Interaction for delta = 0.3
+p1 <- ggplot(df_summary_T2_delta03_1, aes(x = correlation, y = mean_entropy, color = moderators, group = moderators)) +
+  geom_line(linewidth = 1) +  
+  geom_point(size = 4) + 
+  labs(
+    x = "Correlation",
+    y = "Mean Entropy",
+    title = expression("(a) "~delta~"= 0.3"),
+    color = "Moderators"
+  ) +
+  ylim(0, 1.8) +
+  plot_theme +
+  theme(legend.position = "none")
+
+# Plot 2: Moderator and Correlation Interaction for delta = 0.5
+p2 <- ggplot(df_summary_T2_delta05_1, aes(x = correlation, y = mean_entropy, color = moderators, group = moderators)) +
+  geom_line(linewidth = 1) +  
+  geom_point(size = 4) + 
+  labs(
+    x = "Correlation",
+    y = NULL,
+    title = expression("(b) "~delta~"= 0.5")
+  ) +
+  scale_color_discrete(guide = "none") +  # Removes second legend
+  ylim(0, 1.8) +
+  plot_theme
+
+# Combining:
+p1 + p2 + plot_layout(guides = "collect") & theme(legend.position = "bottom")
+
+df_summary_T2_delta03_2 <- dfT2 %>%
+  filter(delta == 0.3) %>%
+  group_by(c_pruning, correlation) %>%
+  summarise(mean_entropy = mean(entropy, na.rm = TRUE))
+
+df_summary_T2_delta05_2 <- dfT2 %>%
+  filter(delta == 0.5) %>%
+  group_by(c_pruning, correlation) %>%
+  summarise(mean_entropy = mean(entropy, na.rm = TRUE))
+
+# Plot 3: Correlation and C Pruning Interaction for delta = 0.3
+p3 <- ggplot(df_summary_T2_delta03_2, aes(x = correlation, y = mean_entropy, color = c_pruning, group = c_pruning)) +
+  geom_line(linewidth = 1) +  
+  geom_point(size = 4) +
+  labs(
+    x = "Correlation",
+    y = "Mean Entropy",
+    title = expression("(a) "~delta~"= 0.3"),
+    color = "Pruning Strictness"
+  ) +
+  ylim(0, 1.8) +
+  plot_theme
+
+# Plot 4: Moderator and Correlation Interaction for delta = 0.5
+p4 <- ggplot(df_summary_T2_delta05_2, aes(x = correlation, y = mean_entropy, color = c_pruning, group = c_pruning)) +
+  geom_line(linewidth = 1) +  
+  geom_point(size = 4) +
+  labs(
+    x = "Correlation",
+    y = "Mean Entropy",
+    title = expression("(b) "~delta~"= 0.5")
+  ) +
+  scale_color_discrete(guide = "none") +
+  ylim(0, 1.8) +
+  plot_theme
+
+# Combining:
+p3 + p4 + plot_layout(guides = "collect") & theme(legend.position = "bottom")
+
+df_summary_T2_delta03_3 <- dfT2 %>%
+  filter(delta == 0.3) %>%
+  group_by(c_pruning, moderators) %>%
+  summarise(mean_entropy = mean(entropy, na.rm = TRUE))
+
+df_summary_T2_delta05_3 <- dfT2 %>%
+  filter(delta == 0.5) %>%
+  group_by(c_pruning, moderators) %>%
+  summarise(mean_entropy = mean(entropy, na.rm = TRUE))
+
+# Plot 5: Moderator and C Pruning Interaction for delta = 0.3
+p5 <- ggplot(df_summary_T2_delta03_3, aes(x = c_pruning, y = mean_entropy, color = moderators, group = moderators)) +
+  geom_line(linewidth = 1) +  
+  geom_point(size = 4) +
+  labs(
+    x = "Pruning Strictness",
+    y = "Mean Entropy",
+    title = expression("(a) "~delta~"= 0.3"),
+    color = "Moderators"
+  ) +
+  ylim(0, 1.8) +
+  plot_theme
+
+# Plot 6: Correlation and C Pruning Interaction for delta = 0.5
+p6 <- ggplot(df_summary_T2_delta05_3, aes(x = c_pruning, y = mean_entropy, color = moderators, group = moderators)) +
+  geom_line(linewidth = 1) +  
+  geom_point(size = 4) +
+  labs(
+    x = "Pruning Strictness",
+    y = "Mean Entropy",
+    title = expression("(b) "~delta~"= 0.5")
+  ) +
+  scale_color_discrete(guide = "none") +
+  ylim(0, 1.8) +
+  plot_theme
+
+# Combining:
+p5 + p6 + plot_layout(guides = "collect") & theme(legend.position = "bottom")
+
+
+
+  ylim(0, 1.8)
+
+summary(aov_3wayT2)
+
+TukeyHSD(aov_3wayT2, "delta")
+TukeyHSD(aov_3wayT2, "moderators:delta:c_pruning")
+TukeyHSD(aov_3wayT2, "moderators:correlation:delta")
+TukeyHSD(aov_3wayT2, "correlation:delta:c_pruning")
 
 }
 
-# ANOVA assumes that the data is normally distributed.  
-# The ANOVA also assumes homogeneity of variance, which 
-# means that the variance among the groups should be 
-# approximately equal. ANOVA also assumes that the 
-# observations are independent of each other.
+

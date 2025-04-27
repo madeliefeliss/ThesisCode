@@ -13,7 +13,7 @@
 #' @import ggplot2
 #' @import gridExtra
 #' @export
-plot.PV <- function(x, iter = 10){
+plot.PV.TN <- function(x, iter = 10){
   
   test_model <- x
   environment(test_model$formula) <- environment()
@@ -29,11 +29,12 @@ plot.PV <- function(x, iter = 10){
     # Building the tree and tracking nodes:
     fnodes <- computetable(new_model)
     
-    # Extracting all nodes (split and terminal nodes) from the tree:
-    all_nodes <- fnodes$leaf  
+    # Extracting terminal nodes from the tree:
+    inx.term <- !(fnodes$leaf %in% fnodes$pleaf)
+    terminal_nodes <- fnodes$leaf[inx.term]
     
     # Updating the frequency of the nodes:
-    node_frequencies <- c(node_frequencies, all_nodes)
+    node_frequencies <- c(node_frequencies, terminal_nodes)
   }
   
   # Converting the frequency vector into a data frame:
@@ -82,7 +83,7 @@ plot.PV <- function(x, iter = 10){
     panel.grid.minor = element_blank(),
     plot.background = element_blank()
   )
-
+  
   config.leaf_width_scale <- 0.9
   
   # Find the good size for the ovals representing nodes
@@ -190,21 +191,21 @@ plot.PV <- function(x, iter = 10){
     labels[length(breaks)-1] <- iter
     print(labels)
     
-    } else{
-      
-        # Otherwise, create range labels:
-        labels <- vector("character", length(breaks) - 1)
+  } else{
+    
+    # Otherwise, create range labels:
+    labels <- vector("character", length(breaks) - 1)
+    
+    for(i in 1:(length(breaks)-1)) {
+      if(i == 1){
+        labels[i] <- paste0(breaks[i], "-", breaks[i+1])
+      } else{
+        labels[i] <- paste0(breaks[i] + 1, "-", breaks[i+1])
         
-        for(i in 1:(length(breaks)-1)) {
-          if(i == 1){
-            labels[i] <- paste0(breaks[i], "-", breaks[i+1])
-          } else{
-            labels[i] <- paste0(breaks[i] + 1, "-", breaks[i+1])
-      
-          }
-        }
-        
+      }
     }
+    
+  }
   
   # Generating 5 distinct shades of blue:
   color_palette <- colorRampPalette(c("#e0f3ff", "#001199"))(length(labels))
@@ -213,19 +214,19 @@ plot.PV <- function(x, iter = 10){
   # Applying the color to the plot:
   vis <- vis + scale_fill_manual(
     values = setNames(rev(color_palette), rev(labels)),  
-    name = "Node Frequency",
+    name = "Terminal Node \nFrequency",
     breaks = labels,
     guide = guide_legend(reverse = T)) + 
     transparent_theme +
     labs(
-      title = "Meta-CART Node Pruning Variability Analysis",
-      subtitle = paste("Frequency of node appearances across", iter, "iterations")
+      title = "Meta-CART Terminal Node Pruning Variability Analysis",
+      subtitle = paste("Frequency of terminal node appearances across", iter, "iterations")
     ) +
     theme(
       plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
       plot.subtitle = element_text(hjust = 0.5, size = 11)
     )
-
+  
   print(nodes)
   print(vis)
   
