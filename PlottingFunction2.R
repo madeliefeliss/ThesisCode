@@ -2,13 +2,14 @@
 #'
 #' Plot function for a \code{REmrt} object. The plot shows the initial tree
 #' result of \code{REmrt} with the nodes being colored based on how often they
-#' appear in the amount of iterations given.
+#' appear as nodes in the amount of iterations given.
 #' The plot function uses the plot method from the package \pkg{visNetwork}
 #' @param x A REmrt object.
 #' @param iter Amount of iterations for frequency check.
+#' @param c.pruning The pruning strictness value (used in the c * SD rule in the pruning process)
 #' @import visNetwork
 #' @export
-plot.PV.I <- function(x, iter = 10) {
+plot.PV.I <- function(x, iter = 10, c.pruning = 0) {
   
   # Loading visNetwork package with silent installation if missing:
   if (!requireNamespace("visNetwork", quietly = TRUE)) install.packages("visNetwork")
@@ -25,7 +26,7 @@ plot.PV.I <- function(x, iter = 10) {
     for(i in 1:iter) {
       
       # Fitting a model with same parameters:
-      new_model <- REmrt(x$formula, data = x$data, vi = x$data$`(vi)`, c.pruning = 0)
+      new_model <- REmrt(x$formula, data = x$data, vi = x$data$`(vi)`, c.pruning = c.pruning)
       
       # Extracting node information from fitted model by computing the table:
       fnodes <- computetable(new_model)
@@ -101,6 +102,7 @@ plot.PV.I <- function(x, iter = 10) {
     data.frame(leaf = nodes$leaf, x_pos = x_pos, y_pos = y_pos)
   }
   
+  # Computing the stability:
   stability_data <- compute_node_stability(x, iter)
   nodes <- stability_data$nodes
   
@@ -121,6 +123,7 @@ plot.PV.I <- function(x, iter = 10) {
     "<b>Retention:</b> ", nodes$Freq, "/", iter, " (", round(nodes$Freq/iter*100,1), "%)"
   )
   
+  # Coloring nodes based on the frequency:
   nodes$value <- nodes$Freq
   nodes$group <- ifelse(is.na(nodes$split), "Leaf", "Split")
   nodes$color.background <- ifelse(
@@ -131,6 +134,8 @@ plot.PV.I <- function(x, iter = 10) {
     )
   )
   nodes$color.border <- "#2B2B2B"
+  
+  # Coloring the text based on color background:
   nodes$font.color <- ifelse(
     nodes$Freq/iter >= 0.7, "white", 
     ifelse(
@@ -141,10 +146,10 @@ plot.PV.I <- function(x, iter = 10) {
   nodes$font.size <- ifelse(is.na(nodes$split), 16, 14)
   nodes$shape <- ifelse(is.na(nodes$split), "box", "ellipse")
   nodes$level <- calculate_node_depth(nodes$leaf, nodes$pleaf)
-  nodes$fixed <- TRUE  # Prevent manual movement
+  nodes$fixed <- TRUE 
   nodes$size <- ifelse(is.na(nodes$split), 35, 30)
   
-  # Configure edge properties:
+  # Creating edge properties:
   edges <- data.frame(
     from = nodes$pleaf[nodes$pleaf != 0],
     to = nodes$leaf[nodes$pleaf != 0],
@@ -159,24 +164,33 @@ plot.PV.I <- function(x, iter = 10) {
   
   # Creating the final visualization:
   visNetwork(nodes, edges) %>%
-    # Add title and subtitle
+    
+    # Adding the title:
     htmlwidgets::prependContent(
       htmltools::tags$div(
         style = "text-align: center; font-size: 12pt; font-weight: bold; margin: 0 auto;",
         "Meta-CART Node Pruning Variability Analysis"
       )
     ) %>%
+    
+    # Adding the subtitle:
     htmlwidgets::prependContent(
       htmltools::tags$div(
         style = "text-align: center; font-size: 10pt; margin: 10px auto 20px;",
         paste("Percentage of nodes appearing across", iter, "iterations")
       )
     ) %>%
+    
+    # Setting the layout:
     visHierarchicalLayout(direction = "UD",
                           levelSeparation = 150,
                           nodeSpacing = 100) %>%
+    
     visNodes(size = nodes$size) %>%
+    
     visEdges(arrows = "to") %>%
+    
+    # Creating the legend:
     htmlwidgets::prependContent(
       htmltools::tags$div(
         id = "customLegend",
@@ -209,6 +223,8 @@ plot.PV.I <- function(x, iter = 10) {
         )
       )
     ) %>%
+    
+    # Making the legend movable and resizable:
     htmlwidgets::onRender("
       function(el) {
         // Load interact.js for drag and wheel handling
@@ -251,12 +267,17 @@ plot.PV.I <- function(x, iter = 10) {
           e.stopPropagation();
         });
       }
-    ")%>%
+    ") %>%
+    
+    # Adding interaction options:
     visOptions(highlightNearest = list(enabled = TRUE, hover = TRUE),
                nodesIdSelection = FALSE) %>%
+    
     visInteraction(dragNodes = FALSE,
                    dragView = TRUE,
                    zoomView = TRUE) %>%
+    
     visPhysics(hierarchicalRepulsion = list(nodeDistance = 100 * 2)) 
+  
   }
 

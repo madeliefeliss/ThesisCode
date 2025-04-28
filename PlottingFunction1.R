@@ -1,8 +1,8 @@
-#' Visualisation of a initial RE meta-tree with frequency coloring
+#' Visualization of a initial RE meta-tree with frequency coloring
 #'
 #' Plot function for a \code{REmrt} object. The plot shows the initial tree
 #' result of \code{REmrt} with the nodes being colored based on how often they
-#' appear in the amount of iterations given.
+#' appear as nodes in the amount of iterations given.
 #' The plot function uses the plot method from the package \pkg{ggplot2}
 #'
 #' For categorical variables we recommend to use short names for levels to 
@@ -10,10 +10,11 @@
 #' @method plot REmrt
 #' @param x A REmrt object.
 #' @param iter Amount of iterations for frequency check.
+#' @param c.pruning The pruning strictness value (used in the c * SD rule in the pruning process)
 #' @import ggplot2
 #' @import gridExtra
 #' @export
-plot.PV <- function(x, iter = 10){
+plot.PV <- function(x, iter = 10, c.pruning = 0){
   
   test_model <- x
   environment(test_model$formula) <- environment()
@@ -24,7 +25,7 @@ plot.PV <- function(x, iter = 10){
   for (i in 1:n_iterations) {
     
     # Training a new model using the same formula, vi and data:
-    new_model <- REmrt(test_model$formula, data = test_model$data, vi = test_model$data$`(vi)`, c.pruning = 0)
+    new_model <- REmrt(test_model$formula, data = test_model$data, vi = test_model$data$`(vi)`, c.pruning = c.pruning)
     
     # Building the tree and tracking nodes:
     fnodes <- computetable(new_model)
