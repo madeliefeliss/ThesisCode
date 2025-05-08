@@ -24,15 +24,13 @@ for (prefix in prefixes) {
           filename2 <- paste0(prefix, "_", tree, "_", d, "_", c, "_", p, "_moderator_counts.rds")
           filepath2 <- file.path(path, filename2)
           
-          # Reading the RDS file and store it in the list:
+          # Reading the RDS file and storing it in the list:
           moderator_counts[[filename2]] <- readRDS(filepath2)
         }
       }
     }
   }
 }
-
-terminal_node_counts[30]
 
 
 }
@@ -44,7 +42,7 @@ terminal_node_counts[30]
 library(data.table)
 library(dplyr)
 
-# Function to compute the entropy:
+# Function to compute the Shannon entropy:
 compute_entropy <- function(counts) { 
   
   # Converting counts to probabilities:
@@ -105,8 +103,8 @@ library(dplyr)
 # Preparing the data frame:
 results_df <- results_df %>%
   mutate(
-    c_delta = factor(paste0("r = ", correlation, ", d = ", delta)),  # Factor for correlation-delta combinations
-    moderators = factor(moderators, levels = c("CON", "CAT", "UBCAT"))  # Ensure correct order
+    c_delta = factor(paste0("r = ", correlation, ", d = ", delta)),  
+    moderators = factor(moderators, levels = c("CON", "CAT", "UBCAT"))  
   )
 
 
@@ -152,27 +150,6 @@ plot2 <- plot_entropy(2)
 
 plot1
 plot2
-
-# Tree model 1:
-
-# More variability:
-# - high cor (0.7)
-# - lower effect size (0.3)
-
-# Unbalanced seems to do quite well
-
-# For unstable, pruning 0.5 is better
-# For stable, pruning 0 is better
-
-# Tree model 2:
-
-# More variability:
-# - Unbalanced
-# - lower effect size (0.3)
-
-# Categorical seems to do best
-
-# Pruning 0 is often better
 
 }  
 
@@ -649,10 +626,6 @@ p6 <- ggplot(df_summary_T2_delta05_3, aes(x = c_pruning, y = mean_entropy, color
 
 # Combining:
 p5 + p6 + plot_layout(guides = "collect") & theme(legend.position = "bottom")
-
-
-
-  ylim(0, 1.8)
 
 summary(aov_3wayT2)
 

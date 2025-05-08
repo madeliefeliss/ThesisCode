@@ -207,9 +207,8 @@ plot.PV <- function(x, iter = 10, c.pruning = 0){
         
     }
   
-  # Generating 5 distinct shades of blue:
-  color_palette <- colorRampPalette(c("#e0f3ff", "#001199"))(length(labels))
-  
+  # Generating 5 distinct colors:
+  color_palette <- c("#ffffcc", "#ffd27f", "#a6c8ff", "#4a90e2", "#003366")
   
   # Applying the color to the plot:
   vis <- vis + scale_fill_manual(
@@ -227,7 +226,6 @@ plot.PV <- function(x, iter = 10, c.pruning = 0){
       plot.subtitle = element_text(hjust = 0.5, size = 11)
     )
 
-  print(nodes)
   print(vis)
   
 }

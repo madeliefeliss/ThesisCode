@@ -18,36 +18,6 @@ r <- c(0.3, 0.5, 0.7)  # Correlation between moderators
 cons <- expand.grid(K, n.bar, tau, mods, tree, delta, r)
 colnames(cons) <- c("K", "n.bar", "tau", "mods", "tree", "delta", "cor")
 
-# Defining the parameters:
-n.bar <- 80        # Average sample size per study
-tau <- sqrt(0.025) # Between-study SD
-mods <- 10         # Number of moderators
-tree <- 1:2        # Tree structure options
-delta <- c(0.3, 0.5) # Effect sizes
-r <- c(0.3, 0.5, 0.7) # Correlations between moderators
-
-# FIRST create empty data frame with correct structure
-cons <- expand.grid(
-  tree = tree,
-  delta = delta,
-  cor = r,
-  KEEP.OUT.ATTRS = FALSE
-)
-
-# THEN assign K values based on tree type
-cons$K <- ifelse(cons$tree == 1, 120, 200)
-
-# NOW add the constant parameters
-cons$n.bar <- n.bar
-cons$tau <- tau
-cons$mods <- mods
-
-# Reorder columns to match your original structure
-cons <- cons[, c("K", "n.bar", "tau", "mods", "tree", "delta", "cor")]
-
-# Verify the structure
-cons
-
 # Loading the required simulation functions:
 source("proj4_SimFuncsSSSV2.R")
 
