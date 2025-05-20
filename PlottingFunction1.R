@@ -21,6 +21,10 @@ plot.PV <- function(x, iter = 10, c.pruning = 0){
   n_iterations <- iter
   node_frequencies <- numeric(0)
   
+  if(iter < 10){
+    stop("Iter must be equal to or larger than 10.")
+  }
+  
   # Looping for the multiple iterations:
   for (i in 1:n_iterations) {
     
@@ -92,6 +96,23 @@ plot.PV <- function(x, iter = 10, c.pruning = 0){
     min(sapply(split(nodes[-1, ]$x,f =nodes[-1, ]$y), function(x) min(diff(sort(x)))))
   y.scale <- x.scale*diff(range(nodes$y))/diff(range(nodes$x))
   
+  # Defining the bins and labels:
+  num_intervals <- 5
+  breaks <- ceiling(seq(0, iter, length.out = num_intervals + 1))
+  breaks[length(breaks)] <- iter  
+  labels <- paste0(breaks[-length(breaks)], "-", breaks[-1])  
+  
+  # Adding the frequency bins to nodes data:
+  nodes$freq_bin <- cut(
+    nodes$Freq,
+    breaks = breaks,
+    labels = labels,
+    include.lowest = TRUE,
+    right = FALSE
+  )
+  
+  nodes$freq_bin <- factor(nodes$freq_bin, levels = labels)
+  
   # Building the plot:
   vis <- ggplot()
   
@@ -125,11 +146,14 @@ plot.PV <- function(x, iter = 10, c.pruning = 0){
   for (i in 1:nrow(nodes)) {
     node <- nodes[i, ]
     parent = nodes[nodes$leaf == node$pleaf,]
-    text_color <- ifelse(node$Freq > iter / 2, "white", "black")
+    text_color <- ifelse(
+      node$Freq/iter > 0.4, "white",  # Darker blues get white text
+      "black"  # Lighter colors get black text
+    )
     
     # Adding nodes:
     vis <- oval_draw(vis, node$x, node$y, config.leaf_oval_ratio, x.scale, 
-                     y.scale, frequency = node$Freq, iter) + 
+                     y.scale, frequency = node$freq_bin, iter) + 
       geom_text(
         data = data.frame(x = node$x, y = node$y),
         aes(x, y),
@@ -177,44 +201,16 @@ plot.PV <- function(x, iter = 10, c.pruning = 0){
         size = config.branch_text_size
       )
   }
-  
-  # Defining the fixed breaks in increments of 5
-  # & rounding up to nearest integer:
-  steps <- ceiling(iter / 5)  
-  breaks <- seq(0, iter, by = steps)
-  
-  # Creating non-overlapping labels:
-  if (steps == 1) {
-    
-    # If steps are 1, just use single numbers:
-    labels <- as.character(breaks[1:(length(breaks)-1)])
-    labels[length(breaks)-1] <- iter
-    print(labels)
-    
-    } else{
-      
-        # Otherwise, create range labels:
-        labels <- vector("character", length(breaks) - 1)
-        
-        for(i in 1:(length(breaks)-1)) {
-          if(i == 1){
-            labels[i] <- paste0(breaks[i], "-", breaks[i+1])
-          } else{
-            labels[i] <- paste0(breaks[i] + 1, "-", breaks[i+1])
-      
-          }
-        }
-        
-    }
-  
+
   # Generating 5 distinct colors:
-  color_palette <- c("#ffffcc", "#ffd27f", "#a6c8ff", "#4a90e2", "#003366")
+  color_palette <- c("#ffffcc", "#ffcc8a", "#87a6b5", "#3e7fb1", "#003366")
   
-  # Applying the color to the plot:
   vis <- vis + scale_fill_manual(
-    values = setNames(rev(color_palette), rev(labels)),  
+    values = setNames(color_palette, labels),  
     name = "Node Frequency",
     breaks = labels,
+    limits = labels,      
+    drop = FALSE,         
     guide = guide_legend(reverse = T)) + 
     transparent_theme +
     labs(

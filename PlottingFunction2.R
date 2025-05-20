@@ -127,22 +127,24 @@ plot.PV.I <- function(x, iter = 10, c.pruning = 0) {
   nodes$value <- nodes$Freq
   nodes$group <- ifelse(is.na(nodes$split), "Leaf", "Split")
   nodes$color.background <- ifelse(
-    nodes$Freq/iter >= 0.7, "#001199", 
-    ifelse(
-      nodes$Freq/iter >= 0.3, "#6699ff",  
-      "#e0f3ff" 
+    nodes$Freq/iter >= 0.8, "#003366",
+      ifelse(nodes$Freq/iter >= 0.6, "#3e7fb1",
+        ifelse(nodes$Freq/iter >= 0.4, "#87a6b5",
+          ifelse(nodes$Freq/iter >= 0.2, "#ffcc8a",
+            "#ffffcc"
+        )
+      )
     )
   )
+  
   nodes$color.border <- "#2B2B2B"
   
   # Coloring the text based on color background:
   nodes$font.color <- ifelse(
-    nodes$Freq/iter >= 0.7, "white", 
-    ifelse(
-      nodes$Freq/iter >= 0.3, "white",  
-      "black" 
-    )
+    nodes$Freq/iter >= 0.4, "white",  # Darker blues get white text
+    "black"  # Lighter colors get black text
   )
+  
   nodes$font.size <- ifelse(is.na(nodes$split), 16, 14)
   nodes$shape <- ifelse(is.na(nodes$split), "box", "ellipse")
   nodes$level <- calculate_node_depth(nodes$leaf, nodes$pleaf)
@@ -206,23 +208,29 @@ plot.PV.I <- function(x, iter = 10, c.pruning = 0) {
           box-shadow: 1px 1px 4px rgba(0,0,0,0.3);
           cursor: move;
           z-index: 1000;
-          width: 160px;
+          width: 120px;
           height: auto;
           transform-origin: top right;
           transition: transform 0.1s ease;
         ",
-        htmltools::tags$b(style = "font-size: 11pt;", "Retention Rate"),
-        htmltools::tags$div(style = "margin-top: 5px;",
-                            htmltools::tags$span(style = "background: #001199; color: white; padding: 2px 4px; border-radius: 3px;", "High (≥70%)")
-        ),
-        htmltools::tags$div(style = "margin-top: 5px;",
-                            htmltools::tags$span(style = "background: #6699ff; color: white; padding: 2px 4px; border-radius: 3px;", "Medium (30-69%)")
-        ),
-        htmltools::tags$div(style = "margin-top: 5px;",
-                            htmltools::tags$span(style = "background: #e0f3ff; color: black; padding: 2px 4px; border-radius: 3px;", "Low (<30%)")
-        )
-      )
-    ) %>%
+            htmltools::tags$b(style = "font-size: 11pt;", "Retention Rate"),
+            htmltools::tags$div(style = "margin-top: 5px;",
+                                htmltools::tags$span(style = "background: #003366; color: white;", "Very High (≥80%)")
+            ),
+            htmltools::tags$div(style = "margin-top: 5px;",
+                                htmltools::tags$span(style = "background: #3e7fb1; color: white;", "High (60-79%)")
+            ),
+            htmltools::tags$div(style = "margin-top: 5px;",
+                                htmltools::tags$span(style = "background: #87a6b5; color: white;", "Medium (40-59%)")
+            ),
+            htmltools::tags$div(style = "margin-top: 5px;",
+                                htmltools::tags$span(style = "background: #ffcc8a; color: black;", "Low (20-39%)")
+            ),
+            htmltools::tags$div(style = "margin-top: 5px;",
+                                htmltools::tags$span(style = "background: #ffffcc; color: black;", "Very Low (<20%)")
+            )
+          )
+        ) %>%
     
     # Making the legend movable and resizable:
     htmlwidgets::onRender("
