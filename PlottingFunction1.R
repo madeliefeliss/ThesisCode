@@ -100,7 +100,17 @@ plot.PV <- function(x, iter = 10, c.pruning = 0){
   num_intervals <- 5
   breaks <- ceiling(seq(0, iter, length.out = num_intervals + 1))
   breaks[length(breaks)] <- iter  
-  labels <- paste0(breaks[-length(breaks)], "-", breaks[-1])  
+  
+  labels <- vector("character", length(breaks) - 1)
+  
+  for(i in 1:(length(breaks)-1)) {
+    if(i == 1){
+      labels[i] <- paste0(breaks[i], "-", breaks[i+1])
+    } else{
+      labels[i] <- paste0(breaks[i] + 1, "-", breaks[i+1])
+      
+    }
+  }
   
   # Adding the frequency bins to nodes data:
   nodes$freq_bin <- cut(

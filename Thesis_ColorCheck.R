@@ -6,4 +6,3 @@ barplot(rep(1, length(colors)), col = colors, main = "Color Palette")
 
 colors <- c("#ffffcc", "#ffcc8a", "#87a6b5", "#3e7fb1", "#003366")
 barplot(rep(1, length(colors)), col = colors, main = "Color Palette")
-
